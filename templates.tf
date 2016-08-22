@@ -2,7 +2,7 @@
 # Default Instances Templates
 #
 resource "template_file" "puppetca" {
-  template                   = "${file("../assets/cloudinit/puppet.yml")}"
+  template                   = "${file("assets/cloudinit/puppet.yml")}"
 
   vars {
     hostname                 = "${var.vdc}-puppetca01"
@@ -12,7 +12,7 @@ resource "template_file" "puppetca" {
 }
 
 resource "template_file" "puppetdb" {
-  template                   = "${file("../assets/cloudinit/puppet.yml")}"
+  template                   = "${file("assets/cloudinit/puppet.yml")}"
   count                      = "${length( split( ",", lookup( var.azs, var.region ) ) )}"
 
   vars {
@@ -23,7 +23,7 @@ resource "template_file" "puppetdb" {
 }
 
 resource "template_file" "bastion" {
-  template                   = "${file("../assets/cloudinit/puppet.yml")}"
+  template                   = "${file("assets/cloudinit/puppet.yml")}"
 
   vars {
     hostname                 = "${var.vdc}-bastion01"
@@ -36,7 +36,7 @@ resource "template_file" "bastion" {
 # Puppet Related Templates
 #
 resource "template_file" "server" {
-  template                 = "${file("../assets/cloudinit/server.sh")}"
+  template                 = "${file("assets/cloudinit/server.sh")}"
 
   vars {
     git_api_token          = "${var.git_api_token}"
@@ -59,7 +59,7 @@ resource "template_file" "server" {
 }
 
 resource "template_file" "agent" {
-  template                 = "${file("../assets/cloudinit/agent.sh")}"
+  template                 = "${file("assets/cloudinit/agent.sh")}"
 
   vars {
     server_name            = "${var.vdc}-puppetca01.${var.domain}"
@@ -71,48 +71,48 @@ resource "template_file" "agent" {
 # AGGREGATED CLOUDINIT TEMPLATES
 #
 resource "template_cloudinit_config" "puppetca" {
-  gzip                     = false
-  base64_encode            = false
+  gzip                        = false
+  base64_encode               = false
 
   part {
-    content_type           = "text/cloud-config"
-    content                = "${template_file.puppetca.rendered}"
+    content_type              = "text/cloud-config"
+    content                   = "${template_file.puppetca.rendered}"
   }
 
   part {
-    content_type           = "text/x-shellscript"
-    content                = "${template_file.server.rendered}"
+    content_type              = "text/x-shellscript"
+    content                   = "${template_file.server.rendered}"
   }
 }
 
 resource "template_cloudinit_config" "puppetdb" {
-  gzip                     = false
-  base64_encode            = false
+  gzip                        = false
+  base64_encode               = false
 
-  count                    = "${length( split( ",", lookup( var.azs, var.region ) ) )}"
+  count                       = "${length( split( ",", lookup( var.azs, var.region ) ) )}"
 
   part {
-    content_type           = "text/cloud-config"
-    content                = "${element(template_file.puppetdb.*.rendered, count.index)}"
+    content_type              = "text/cloud-config"
+    content                   = "${element(template_file.puppetdb.*.rendered, count.index)}"
   }
 
   part {
-    content_type           = "text/x-shellscript"
-    content                = "${template_file.agent.rendered}"
+    content_type              = "text/x-shellscript"
+    content                   = "${template_file.agent.rendered}"
   }
 }
 
 resource "template_cloudinit_config" "bastion" {
-  gzip                     = false
-  base64_encode            = false
+  gzip                        = false
+  base64_encode               = false
 
   part {
-    content_type           = "text/cloud-config"
-    content                = "${template_file.bastion.rendered}"
+    content_type              = "text/cloud-config"
+    content                   = "${template_file.bastion.rendered}"
   }
 
   part {
-    content_type           = "text/x-shellscript"
-    content                = "${template_file.agent.rendered}"
+    content_type              = "text/x-shellscript"
+    content                   = "${template_file.agent.rendered}"
   }
 }
